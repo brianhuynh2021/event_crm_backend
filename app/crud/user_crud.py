@@ -1,12 +1,14 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.models.user_model import User
+from app.models.event_attendee_model import EventAttendee
 from app.schemas.user_schema import UserCreate
-from sqlalchemy import and_
+from app.models.event_model import Event
+from sqlalchemy import func, and_
 
 # Create
 def create_user(db: Session, user_in: UserCreate) -> User:
-    user = User(**user_in.dict())
+    user = User(**user_in.model_dump())
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -43,24 +45,67 @@ def filter_users(
     job_title: Optional[str] = None,
     city: Optional[str] = None,
     state: Optional[str] = None,
-    gender: Optional[str] = None,
+    hosted_min: Optional[int] = None,
+    hosted_max: Optional[int] = None,
+    attended_min: Optional[int] = None,
+    attended_max: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
     sort_by: str = "created_at",
     sort_dir: str = "desc"
 ) -> List[User]:
-    query = db.query(User)
+    # Subqueries for hosted and attended counts
+    hosted_subq = db.query(
+        Event.owner,
+        func.count(Event.id).label("hosted_count")
+    ).group_by(Event.owner).subquery()
 
-    if company:
-        query = query.filter(User.company == company)
-    if job_title:
-        query = query.filter(User.job_title == job_title)
-    if city:
-        query = query.filter(User.city == city)
-    if state:
-        query = query.filter(User.state == state)
-    if gender:
-        query = query.filter(User.gender==gender)
+    attended_subq = db.query(
+        EventAttendee.user_id,
+        func.count(EventAttendee.event_id).label("attended_count")
+    ).group_by(EventAttendee.user_id).subquery()
+
+    query = db.query(User).outerjoin(
+        hosted_subq, User.id == hosted_subq.c.owner
+    ).outerjoin(
+        attended_subq, User.id == attended_subq.c.user_id
+    ).add_columns(
+        hosted_subq.c.hosted_count,
+        attended_subq.c.attended_count
+    )
+
+    # Filter base fields
+    filters = {
+        "company": company,
+        "job_title": job_title,
+        "city": city,
+        "state": state
+    }
+
+    for field, value in filters.items():
+        if value:
+            query = query.filter(getattr(User, field) == value)
+
+    # Hosted range filter
+    if hosted_min is not None:
+        query = query.filter(
+            func.coalesce(hosted_subq.c.hosted_count, 0) >= hosted_min
+        )
+    if hosted_max is not None:
+        query = query.filter(
+            func.coalesce(hosted_subq.c.hosted_count, 0) <= hosted_max
+        )
+
+    # Attended range filter
+    if attended_min is not None:
+        query = query.filter(
+            func.coalesce(attended_subq.c.attended_count, 0) >= attended_min
+        )
+    if attended_max is not None:
+        query = query.filter(
+            func.coalesce(attended_subq.c.attended_count, 0) <= attended_max
+        )
+
     # Sorting
     sort_column = getattr(User, sort_by, None)
     if sort_column is not None:
@@ -69,4 +114,5 @@ def filter_users(
         else:
             query = query.order_by(sort_column.asc())
 
-    return query.offset(skip).limit(limit).all()
+    results = query.offset(skip).limit(limit).all()
+    return [row[0] for row in results]  # extract User only from tuple

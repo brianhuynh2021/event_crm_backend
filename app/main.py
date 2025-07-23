@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.core.log_config import setup_logging
-from app.api.v1.routes import users, events
+from app.api.v1.routes import users
 import logging
 
 setup_logging()
@@ -9,7 +9,6 @@ logger.info("✅ Json logging works!")
 app = FastAPI()
 
 app.include_router(users.router,prefix="/api/v1/users", tags=["Users"])
-app.include_router(events.router, prefix="/api/v1/events", tags=["Events"])
 
 @app.get("/")
 def root():

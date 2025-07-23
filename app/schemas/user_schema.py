@@ -24,6 +24,7 @@ class UserOut(UserBase):
     id: str
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
-
+    hosted_count: Optional[int]
+    attended_count: Optional[int]
     class Config:
         orm_mode = True

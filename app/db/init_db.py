@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from app.models.user_model import User
 from app.models.event_model import Event
+
+from app.models.event_attendee_model import EventAttendee
 from app.db.session import SessionLocal, engine
 from app.db.base import Base
 
@@ -16,11 +18,14 @@ def init_db():
     db: Session = SessionLocal()
 
     try:
-        # ❌ Nếu đã có user → không seed lại
+        #❌ Nếu đã có user → không seed lại
         # if db.query(User).first():
         #     print("✅ Database already seeded.")
         #     return
-
+         # ✅ Xóa dữ liệu cũ
+        db.query(Event).delete()
+        db.query(User).delete()
+        db.commit()
         now = datetime.now(timezone.utc)
 
         # ✅ Danh sách người dùng mẫu
@@ -111,7 +116,7 @@ def init_db():
                 venue="Grab HQ, One-North",
                 max_capacity=200,
                 owner=user_ids[0],
-                hosts=",".join([user_ids[0], user_ids[2]]),
+                hosts=",".join(str(uid) for uid in [user_ids[0], user_ids[2]]),
                 attendees=json.dumps([user_ids[1], user_ids[4]]),
                 status="published",
             ),
@@ -125,7 +130,7 @@ def init_db():
                 venue="Pixel Building, One-North",
                 max_capacity=100,
                 owner=user_ids[2],
-                hosts=",".join([user_ids[2]]),
+                hosts=",".join(str(uid) for uid in [user_ids[2]]),
                 attendees=json.dumps([user_ids[0], user_ids[1], user_ids[3]]),
                 status="draft",
             ),
@@ -139,13 +144,37 @@ def init_db():
                 venue="GovTech Campus @ Maxwell",
                 max_capacity=50,
                 owner=user_ids[3],
-                hosts=",".join([user_ids[3]]),
+                hosts=",".join(str(uid) for uid in [user_ids[3]]),
                 attendees=json.dumps([user_ids[4]]),
                 status="published",
             ),
         ]
 
         db.add_all(events)
+        db.commit()
+        
+        attendees = [
+            EventAttendee(event_id=events[0].id, user_id=user_ids[1]),
+            EventAttendee(event_id=events[0].id, user_id=user_ids[4]),
+            EventAttendee(event_id=events[1].id, user_id=user_ids[0]),
+            EventAttendee(event_id=events[1].id, user_id=user_ids[1]),
+            EventAttendee(event_id=events[1].id, user_id=user_ids[3]),
+            EventAttendee(event_id=events[2].id, user_id=user_ids[4]),
+        ]
+        # Initialize hosted_count and attended_count
+        hosted_count = {uid: 0 for uid in user_ids}
+        attended_count = {uid: 0 for uid in user_ids}
+        
+        for e in events:
+            hosted_count[e.owner] += 1
+            # ✅ Parse attendee IDs if attendees field is a valid JSON string
+            if isinstance(e.attendees, str) and e.attendees.strip():
+                for aid in json.loads(e.attendees):
+                    attended_count[aid] += 1
+        for u in users:
+            u.hosted_count = hosted_count[u.id]
+            u.attended_count = attended_count[u.id]
+        db.add_all(attendees)
         db.commit()
     except Exception as e:
         print("❌ Error seeding database:", e)
