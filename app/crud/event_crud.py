@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.event_model import Event
 from app.schemas.event_schema import EventCreate
 import json
-from typing import List
+from typing import List, Optional
 
 # Create a new event
 def create_event(db: Session, event_in: EventCreate) -> Event:
@@ -48,3 +48,36 @@ def update_event(db: Session, event_id: str, updates: dict) -> Event:
     db.commit()
     db.refresh(event)
     return event
+
+def filter_events(
+    db: Session,
+    owner: Optional[str] = None,
+    attendee: Optional[str] = None,
+    start_from: Optional[str] = None,
+    end_to: Optional[str] = None,
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    sort_by: str = "created_at",
+    sort_dir: str = "desc"
+) -> List[Event]:
+    query = db.query(Event)
+
+    if owner:
+        query = query.filter(Event.owner == owner)
+    if attendee:
+        query = query.filter(Event.attendees.like(f"%{attendee}%"))
+    if start_from:
+        query = query.filter(Event.start_at >= start_from)
+    if end_to:
+        query = query.filter(Event.end_at <= end_to)
+    if status:
+        query = query.filter(Event.status == status)
+
+    sort_column = getattr(Event, sort_by, Event.created_at)
+    if sort_dir == "desc":
+        query = query.order_by(sort_column.desc())
+    else:
+        query = query.order_by(sort_column.asc())
+
+    return query.offset(skip).limit(limit).all()
