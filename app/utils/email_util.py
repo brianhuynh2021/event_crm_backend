@@ -5,8 +5,6 @@ from sqlalchemy.orm import Session
 import os
 import uuid
 
-def send_email_to_user(to: str, subject: str, content: str):
-    print(f"📧 Sending to {to} | Subject: {subject}\nContent:\n{content}\n")
 
 async def send_email_to_user_smtp(
     to: str,

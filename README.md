@@ -70,15 +70,13 @@ github/workflow
 
 ---
 
-## 🧪 API Overview
+## 🧪 API Endpoints
 
-| Endpoint                           | Method | Description                            |
-|-----------------------------------|--------|----------------------------------------|
-| `/api/v1/users/filter`            | GET    | Filter users by query + pagination     |
-| `/api/v1/users/send-email`        | POST   | Send console-based emails              |
-| `/api/v1/users/send-email-smtp`   | POST   | Send real emails via SMTP              |
-| `/`                               | GET    | Root endpoint                          |
-
+| Method | Endpoint                      | Description                           |
+|--------|-------------------------------|---------------------------------------|
+| GET    | `/api/v1/users/filter`        | Filter users by query, pagination, sorting|
+| POST   | `/api/v1/users/send-email-smtp` | Send email via SMTP (e.g. Gmail)    |
+| GET    | `/`                           | Health check root 
 ---
 
 ## 📊 Efficient Querying

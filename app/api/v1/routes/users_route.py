@@ -5,7 +5,7 @@ from app.schemas.user_schema import UserOut
 from app.crud.user_crud import filter_users
 from app.api.v1.deps import get_db
 from app.schemas.email_schema import EmailRequest
-from app.utils.email_util import send_email_to_user, send_email_to_user_smtp
+from app.utils.email_util import send_email_to_user_smtp
 from app.services.user_service import apply_user_filters
 
 router = APIRouter()
@@ -46,21 +46,7 @@ def filter_user_endpoint(
         sort_by=sort_by,
         sort_dir=sort_dir
     )
-    
-@router.post("/send-email")
-def send_email_to_filtered_users(payload: EmailRequest, db: Session = Depends(get_db)):
-    query = apply_user_filters(db, payload)
-    users = query.all()
-    if not users:
-        raise HTTPException(status_code=404, detail="No users match the filter criteria")
 
-    for user in users:
-        send_email_to_user(to=str(user.email), subject=payload.subject, content=payload.content)
-
-    return {
-        "message": f"Sent email to {len(users)} user(s).",
-        "emails": [str(user.email) for user in users]}
-    
 @router.post("/send-email-smtp")
 async def send_email_to_filtered_users_smtp(
     payload: EmailRequest, 
