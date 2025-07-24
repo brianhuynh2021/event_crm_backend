@@ -27,4 +27,4 @@ class UserOut(UserBase):
     hosted_count: Optional[int]
     attended_count: Optional[int]
     class Config:
-        orm_mode = True
+        from_attributes = True
