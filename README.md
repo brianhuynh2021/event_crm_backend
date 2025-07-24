@@ -117,3 +117,6 @@ app/
 	•	No external mail services (SendGrid, etc.) used to keep it simple.
 	•	App is built without Alembic; DB is managed manually or by raw SQL setup.
 	•	Uses SQLite for local dev. Easily swappable for PostgreSQL.
+
+👨‍💻 Author
+	•	Brian Huynh – FastAPI Developer, 2025
