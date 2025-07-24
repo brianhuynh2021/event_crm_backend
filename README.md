@@ -68,6 +68,14 @@ app/
 github/workflow
 ├── ci.yml/# Config it run on github action
 
+## 🛠️ Tech Stack
+
+- FastAPI (Web framework)
+- SQLAlchemy (ORM)
+- SQLite (Local DB for dev)
+- Docker (Containerization)
+- GitHub Actions (CI for running tests)
+- Pydantic v2 (Data validation)
 ---
 
 ## 🧪 API Endpoints
