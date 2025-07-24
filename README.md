@@ -65,6 +65,8 @@ app/
 ├── utils/
 │   └── email_util.py      # SMTP email sender
 └── main.py                # FastAPI app entry
+github/workflow
+├── ci.yml/# Config it run on github action
 
 ---
 
@@ -103,14 +105,22 @@ app/
 }
 
 ⚙️ Config & Setup
+## Run it on local
+    1. 📦 Set up dependencies
+        ~ python3.13 -m venv venv
+        ~ source venb/bin/activate (Mac/Linux) - venv\Scripts\activate (Windows)
+        ~ pip install -r requirements.txt
+    2. 🔑 Environment Variables (.env)
+        EMAIL_SENDER=your_email@gmail.com
+        EMAIL_PASSWORD=your_gmail_app_password
+    3. 🚀 Run the App
+        ~ uvicorn app.main:app --reload
+## Run it as docker
+    1. Build the image
+    ~ docker build -t event-crm-app .
 
-1. 📦 Install Dependencies
-    ~ pip install -r requirements.txt
-2. 🔑 Environment Variables (.env)
-    EMAIL_SENDER=your_email@gmail.com
-    EMAIL_PASSWORD=your_gmail_app_password
-3. 🚀 Run the App
-    ~ uvicorn app.main:app --reload
+    2. Run the container
+    docker run -p 8000:8000 event-crm-app
 
 🧠 Decisions & Assumptions
 	•	EmailLog is used for basic analytics; extendable to track bounces or open rate.
@@ -119,4 +129,4 @@ app/
 	•	Uses SQLite for local dev. Easily swappable for PostgreSQL.
 
 👨‍💻 Author
-	•	Brian Huynh – FastAPI Developer, 2025
+	•	Brian Huynh – Event ERM assignment -FastAPI Developer, 2025
